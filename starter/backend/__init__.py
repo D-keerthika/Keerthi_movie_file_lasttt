@@ -2,7 +2,10 @@ import os
 from flask import Flask
 from flask_cors import CORS
 
-from .movies import movies_api
+if __package__:
+    from .movies import movies_api
+else:
+    from movies import movies_api
 
 app = Flask(__name__)
 CORS(app)

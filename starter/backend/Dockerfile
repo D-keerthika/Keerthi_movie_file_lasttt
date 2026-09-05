@@ -1,24 +1,21 @@
-FROM public.ecr.aws/docker/library/python:3.10-alpine
-ENV FLASK_RUN_HOST=0.0.0.0
+FROM python:3.10-slim
 
-WORKDIR /
-RUN adduser -u 1000 -D app
-RUN apk update && \
-  apk add \
-  pcre \
-  pcre-dev \
-  build-base \
-  gcc \
-  linux-headers \
-  openssl \
-  libffi-dev \
-  && pip install pipenv
+WORKDIR /app
 
-RUN mkdir -p /var/www/app && mkdir /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    build-essential \
+    python3-dev \
+ && rm -rf /var/lib/apt/lists/*
 
-COPY Pipfile* /app
-RUN cd /app && pipenv install --system --skip-lock
+RUN pip install --no-cache-dir pipenv gunicorn
 
-COPY . /app
+COPY Pipfile* /app/
+RUN pipenv install --system --skip-lock
 
-CMD ["gunicorn", "-b", ":5000", "movies_api:app"]
+COPY . /app/
+
+ENV PYTHONPATH=/app
+EXPOSE 5000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "movies_api:app"]
