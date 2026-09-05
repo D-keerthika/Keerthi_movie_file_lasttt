@@ -1,7 +1,7 @@
 FROM public.ecr.aws/docker/library/python:3.10-alpine
 ENV FLASK_RUN_HOST=0.0.0.0
+ENV PYTHONPATH=/app
 
-WORKDIR /
 RUN adduser -u 1000 -D app
 RUN apk update && \
   apk add \
@@ -12,13 +12,17 @@ RUN apk update && \
   linux-headers \
   openssl \
   libffi-dev \
-  && pip install pipenv
+  && pip install --no-cache-dir pipenv gunicorn
 
-RUN mkdir -p /var/www/app && mkdir /app
+WORKDIR /app
 
-COPY Pipfile* /app
-RUN cd /app && pipenv install --system --skip-lock
+COPY Pipfile* /app/
+RUN pipenv install --system --skip-lock
 
-COPY . /app
+COPY . /app/
 
-CMD ["gunicorn", "-b", ":5000", "movies_api:app"]
+USER app
+
+EXPOSE 5000
+
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "movies_api:app"]
