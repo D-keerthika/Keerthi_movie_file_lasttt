@@ -18,4 +18,4 @@ COPY . /app/
 ENV PYTHONPATH=/app
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "movies_api:app"]
+CMD ["python", "-m", "gunicorn", "--bind", "0.0.0.0:5000", "__init__:app"]
