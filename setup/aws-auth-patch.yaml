@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapRoles: |
+    - rolearn: arn:aws:iam::429473037212:role/udacity-node-group
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+  mapUsers: |
+    - userarn: arn:aws:iam::429473037212:user/github-actions-user
+      username: github-actions-user
+      groups:
+        - system:masters

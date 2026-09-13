@@ -1,4 +1,15 @@
 ####################
+
+data "aws_eks_cluster_auth" "main" {
+  name = aws_eks_cluster.main.name
+}
+
+provider "kubernetes" {
+  host                   = aws_eks_cluster.main.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.main.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.main.token
+}
+
 # VPC Configuration
 ####################
 # Create a VPC
@@ -197,7 +208,8 @@ resource "aws_eks_node_group" "main" {
   version         = aws_eks_cluster.main.version
   node_role_arn   = aws_iam_role.node_group.arn
   subnet_ids      = [var.enable_private == true ? aws_subnet.private_subnet.id : aws_subnet.public_subnet.id]
-  release_version = nonsensitive(data.aws_ssm_parameter.eks_ami_release_version.value)
+  ami_type        = "BOTTLEROCKET_x86_64"
+  # release_version = nonsensitive(data.aws_ssm_parameter.eks_ami_release_version.value)
   instance_types  = ["t3.small"]
 
   scaling_config {
@@ -327,4 +339,31 @@ data "aws_iam_policy_document" "github_policy" {
     actions   = ["ecr:*", "eks:*", "ec2:*", "iam:GetUser"]
     resources = ["*"]
   }
+}
+
+resource "kubernetes_config_map_v1_data" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapRoles = yamlencode([
+      {
+        rolearn  = aws_iam_role.node_group.arn
+        username = "system:node:{{EC2PrivateDNSName}}"
+        groups   = ["system:bootstrappers", "system:nodes"]
+      }
+    ])
+    mapUsers = yamlencode([
+      {
+        userarn  = "arn:aws:iam::694497587751:user/github-actions-user"
+        username = "github-actions-user"
+        groups   = ["system:masters"]
+      }
+    ])
+  }
+
+  force = true
+  depends_on = [aws_eks_cluster.main, aws_eks_node_group.main]
 }

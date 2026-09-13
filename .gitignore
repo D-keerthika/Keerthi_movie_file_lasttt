@@ -4,4 +4,10 @@ node_modules
 .terraform.tfstate.lock.info
 *.tfstate.backup
 credentials
-.pytest_cache
+.pytest_cachesetup/kubectl.exe 
+setup/aws-iam-authenticator 
+setup/aws-iam-authenticator 
+setup/terraform/terraform.tfstate 
+setup/terraform/terraform.tfstate.backup 
+**/data/ 
+**/__pycache__/ 
