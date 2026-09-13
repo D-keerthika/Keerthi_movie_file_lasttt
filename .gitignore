@@ -11,3 +11,4 @@ setup/terraform/terraform.tfstate
 setup/terraform/terraform.tfstate.backup 
 **/data/ 
 **/__pycache__/ 
+/setup/kubectl.exe
